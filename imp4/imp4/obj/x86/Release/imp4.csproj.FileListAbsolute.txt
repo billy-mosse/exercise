@@ -9,3 +9,9 @@ c:\users\chathuranga\documents\visual studio 2010\Projects\imp4\imp4\obj\x86\Rel
 c:\users\chathuranga\documents\visual studio 2010\Projects\imp4\imp4\obj\x86\Release\imp4.pdb
 C:\Billy\ejercicio\git\imp4\imp4\obj\x86\Release\imp4.exe
 C:\Billy\ejercicio\git\imp4\imp4\obj\x86\Release\imp4.pdb
+C:\Billy\ejercicio\git\imp4\imp4\bin\Release\imp4.exe
+C:\Billy\ejercicio\git\imp4\imp4\bin\Release\imp4.pdb
+C:\Billy\ejercicio\git\imp4\imp4\obj\x86\Release\imp4.csprojResolveAssemblyReference.cache
+C:\Billy\ejercicio\git\imp4\imp4\obj\x86\Release\imp4.imp4.resources
+C:\Billy\ejercicio\git\imp4\imp4\obj\x86\Release\imp4.Properties.Resources.resources
+C:\Billy\ejercicio\git\imp4\imp4\obj\x86\Release\imp4.csproj.GenerateResource.Cache
