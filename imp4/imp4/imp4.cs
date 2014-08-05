@@ -27,16 +27,20 @@ namespace imp4
         }
 
         private void canny ( ) {
+
+            //I get the bitmap from the image loaded
             Bitmap b = new Bitmap (pictureBox1.Image);
             int width = b.Width;
             int height = b.Height;
 
+            //this wont be the final bitmap for pctOutputImage
             Bitmap n = new Bitmap (width, height);
 
             int[,] allPixR = new int[width, height];
             int[,] allPixG = new int[width, height];
             int[,] allPixB = new int[width, height];
 
+            //Decompose the image in R, G and B
             for ( int i = 0; i < width; i++ )
             {
                 for ( int j = 0; j < height; j++ )
@@ -46,6 +50,10 @@ namespace imp4
                     allPixB[i, j] = b.GetPixel (i, j).B;
                 }
             }
+
+            //Apply Gaussian filter (convolution of the 2 matrices)
+            //The Gaussian matrix is:
+            //{{1,4,7,4,1}, {4,16,26,15,4}, {7,26,41,26,7}, {4,16,26,16,4}, {1,4,7,4,1}} (it's symmetric)
             for ( int i = 2; i < b.Width - 2; i++ )
             {
                 for ( int j = 2; j < b.Height - 2; j++ )
@@ -76,7 +84,9 @@ namespace imp4
                     n.SetPixel (i, j, Color.FromArgb (red, green, blue));
                 }
             }
-            //pictureBox2.Image = n;//////////////////////////////////////////////////////here onward use n///////////////////////////////////////////////
+            //Now n has a blurred version of the original image. It is not affected by a single noisy pixel by any significant degree
+            //TODO: Is n really necessary?
+
             int[,] allPixRn = new int[width, height];
             int[,] allPixGn = new int[width, height];
             int[,] allPixBn = new int[width, height];
@@ -91,15 +101,21 @@ namespace imp4
                 }
             }
 
-
+            //Now I use the Sobel operator to get the derivatives
+            //Note: I could do this also with Roberts or Prewitt
+            //Get the value for the first derivative in the horizontal direction
             int[,] gx = new int[,] { { -1, 0, 1 }, { -2, 0, 2 }, { -1, 0, 1 } };
-            int[,] gy = new int[,] { { 1, 2, 1 }, { 0, 0, 0 }, { -1, -2, -1 } };  
+
+            //Get the value for the first derivative in the vertical direction
+            int[,] gy = new int[,] { { 1, 2, 1 }, { 0, 0, 0 }, { -1, -2, -1 } };
+
             int new_rx = 0, new_ry = 0;
             int new_gx = 0, new_gy = 0;
             int new_bx = 0, new_by = 0;
             int rc, gc, bc;
             int gradR, gradG, gradB;
 
+            //Map of gradientes declaration (for Red, Green and Blue)
             int[,] graidientR = new int [width, height];
             int[,] graidientG = new int [width, height];
             int[,] graidientB = new int [width, height];
@@ -128,6 +144,15 @@ namespace imp4
                     gc = 0;
                     bc = 0;
 
+                    // 2-dimensional convolution operation between the matrix gx for the horizontal derivative
+                    // Ideam with the matrix gy for the vertical derivative
+                    // Do this for R,G and B
+
+                    // Basically, for each pixel P of the Red Matrix (for example), I'm getting its neighbours
+                    // To simplify, let's say that I get a 3x3 matrix where P is the (1,1)
+                    // For each neighbour N of (1,1) of index (i,j), I'm multiplying it by gx[i,j] and adding that value to horizontal derivative of P
+                    // Similarly, I multiply N by gy[i,j] and add the value to the vertical derivative of P
+                    //I do that for the Red, Green and Blue matrix (I had decomposed the blurred image in these three matrices)
                     for ( int wi = -1; wi < 2; wi++ )
                     {
                         for ( int hw = -1; hw < 2; hw++ )
@@ -146,19 +171,26 @@ namespace imp4
                         }
                     }
 
-                    //find gradieant
-                    gradR = (int)Math.Sqrt (( new_rx * new_rx ) + ( new_ry * new_ry ));
+                    //Find gradient (its the norm of (new_rx, new_ry))
+                    //Do this for R, G, and B
+                    gradR = (int)Math.Sqrt((new_rx * new_rx) + (new_ry * new_ry));
                     graidientR [i,j]= gradR; 
 
                     gradG = (int)Math.Sqrt (( new_gx * new_gx ) + ( new_gy * new_gy ));
                     graidientG [i,j]= gradG; 
 
                     gradB = (int)Math.Sqrt (( new_bx * new_gx ) + ( new_by * new_by ));
-                    graidientB [i,j]= gradB; 
-                    //
+                    graidientB [i,j]= gradB;
+
+
                     //find tans
                     ////////////////tan red//////////////////////////////////
+
+                    //Calculate tan(vertical_derivative/horizontal_derivative). The result is in radians, so I multiply it by 180/PI
+
                     atanR= (int)( ( Math.Atan ((double)new_ry / new_rx) ) * ( 180 / Math.PI ) );
+
+                    //Once I get the arctangent, I round it to 4 possible directions.
                     if ( (atanR > 0 && atanR < 22.5) || (atanR > 157.5 && atanR < 180) )
                     {
                         atanR = 0;
@@ -173,6 +205,8 @@ namespace imp4
                         atanR = 135;
                     }
 
+
+                    //Now I surrogate the 4 possible values to 0,1,2,3 in the atangent matrix
                     if ( atanR == 0 )
                     {
                         tanR[i, j] = 0;
@@ -192,6 +226,7 @@ namespace imp4
                     ////////////////tan red end//////////////////////////////////
 
                     ////////////////tan green//////////////////////////////////
+                    //I do the same thing for green
                     atanG = (int)( ( Math.Atan ((double)new_gy / new_gx) ) * ( 180 / Math.PI ) );
                     if ( ( atanG > 0 && atanG < 22.5 ) || ( atanG > 157.5 && atanG < 180 ) )
                     {
@@ -227,8 +262,8 @@ namespace imp4
                     }
                     ////////////////tan green end//////////////////////////////////
 
-
                     ////////////////tan blue//////////////////////////////////
+                    //And the same for blue
                     atanB = (int)( ( Math.Atan ((double)new_by / new_bx) ) * ( 180 / Math.PI ) );
                     if ( ( atanB > 0 && atanB < 22.5 ) || ( atanB > 157.5 && atanB < 180 ) )
                     {
@@ -279,16 +314,24 @@ namespace imp4
                     ////red
                     if ( tanR[i, j] == 0 )
                     {
+                        //the point will not be considered to be on an edge if its gradient magnitude is smaller than the magnitudes at pixels in the east and west directions
                         if ( graidientR[i - 1, j] < graidientR[i, j] && graidientR[i + 1, j] < graidientR[i, j] )
                         {
+                            //The point may be considered of an edge, so we keep the value of the gradient (we are only considering the Red Matrix here).
+                            //The gradient will also have to be greater than the threshold for the pixel to be considered part of an edge
+                            //TODO: add high threshold
                             allPixRs[i, j] = graidientR[i, j];
                         }
                         else {
+
+                            //The point is not in the edge
                             allPixRs[i,j] = 0;
                         }
                     }
                     if ( tanR[i, j] == 1 )
                     {
+                        //Same as above. For each of the 4 directions, we draw an imaginary perpendicular line to the tanR that crosses the pixel P we are processing,
+                        // and we ask if the gradient magnitude of the 2 neighbours of P that are in that line is bigger or smaller than P's gradient
                         if ( graidientR[i - 1, j + 1] < graidientR[i, j] && graidientR[i + 1, j - 1] < graidientR[i, j] )
                         {
                             allPixRs[i, j] = graidientR[i, j];
@@ -321,6 +364,7 @@ namespace imp4
                         }
                     }
 
+                    //Same for green
                     //green
                     if ( tanG[i, j] == 0 )
                     {
@@ -367,6 +411,7 @@ namespace imp4
                         }
                     }
 
+                    //Same for blue
                     //blue
                     if ( tanB[i, j] == 0 )
                     {
@@ -415,6 +460,7 @@ namespace imp4
                 }
             }
 
+            //TODO: fixed threshold?
             int threshold = Convert.ToInt16(textBox1.Text);
             int[,] allPixRf = new int[width, height];
             int[,] allPixGf = new int[width, height];
@@ -426,6 +472,9 @@ namespace imp4
             for (int i = 2; i <width-2 ;i++){
                 for ( int j = 2; j < height-2;j++ )
                 {
+                    //If any of the values of the gradients is greater than the threshold, then I light up the pixel in allPixRf
+                    //TODO: couldnt allPixRf be a boolean matrix? Same for green and blue
+                    //TODO2: do we really need these matrices?
                     if ( allPixRs[i, j] > threshold )
                     {
                         allPixRf[i, j] = 1;
@@ -452,8 +501,9 @@ namespace imp4
                         allPixBf[i, j] = 0;
                     }
 
-                    
 
+                    //If any of the values of the matrices is 1, then one of the gradients is greater than the threshold, so I consider that the pixel belongs to a border,
+                    // and I light it up
                     if ( allPixRf[i, j] == 1 || allPixGf[i, j] == 1 || allPixBf[i, j] == 1 )
                     {
                         bb.SetPixel (i, j, Color.Black);
@@ -462,10 +512,7 @@ namespace imp4
                         bb.SetPixel (i, j, Color.White);
                 }
             }
-            pictureBox2.Image = bb;
-
-
-        
+            pictureBox2.Image = bb;        
         }
 
         private void button3_Click ( object sender, EventArgs e )
