@@ -18,6 +18,7 @@ namespace imp4
 
         String filePath;
 
+        //Lets the user upload an input image
         private void btnUploadImage_Click ( object sender, EventArgs e )
         {
             if ( dOpen.ShowDialog () == DialogResult.OK ) {
@@ -26,6 +27,7 @@ namespace imp4
             }
         }
 
+        //Returns true if the value is between the thresholds
         private bool isValueBetweenThresholds(int value, int lowThreshold, int highThreshold)
         {
             if ((value > lowThreshold) && (value < highThreshold))
@@ -34,6 +36,27 @@ namespace imp4
             return false;
         }
 
+        /**
+         * Example of refactorization of the code.
+         * This function is called for Red, Green and Blue.
+         * Parameters:
+         * matrix: the red/green/blue matrix with the pixels of the image
+         * i: the row we are processing
+         * j: the column we are processing
+         * return: the new value for the (i, j) value of the matrix
+         */
+        private int getConvolutionValue(ref int[,] matrix, int i, int j)
+        {
+            return ((matrix[i - 2, j - 2]) * 1 + (matrix[i - 1, j - 2]) * 4 + (matrix[i, j - 2]) * 7 + (matrix[i + 1, j - 2]) * 4 + (matrix[i + 2, j - 2])
+                              + (matrix[i - 2, j - 1]) * 4 + (matrix[i - 1, j - 1]) * 16 + (matrix[i, j - 1]) * 26 + (matrix[i + 1, j - 1]) * 16 + (matrix[i + 2, j - 1]) * 4
+                              + (matrix[i - 2, j]) * 7 + (matrix[i - 1, j]) * 26 + (matrix[i, j]) * 41 + (matrix[i + 1, j]) * 26 + (matrix[i + 2, j]) * 7
+                              + (matrix[i - 2, j + 1]) * 4 + (matrix[i - 1, j + 1]) * 16 + (matrix[i, j + 1]) * 26 + (matrix[i + 1, j + 1]) * 16 + (matrix[i + 2, j + 1]) * 4
+                              + (matrix[i - 2, j + 2]) * 1 + (matrix[i - 1, j + 2]) * 4 + (matrix[i, j + 2]) * 7 + (matrix[i + 1, j + 2]) * 4 + (matrix[i + 2, j + 2]) * 1) / 273;
+        }
+
+        /**
+         * Shows a monochromatic image that only has its edges
+         */
         private void canny ( ) {
 
             //I get the bitmap from the image loaded
@@ -67,34 +90,11 @@ namespace imp4
             {
                 for ( int j = 2; j < b.Height - 2; j++ )
                 {
-                    int red = (
-                              ( ( allPixR [i - 2, j - 2] ) * 1 + ( allPixR [i - 1, j - 2] ) * 4 + ( allPixR [i, j - 2] ) * 7 + ( allPixR [i + 1, j - 2] ) * 4 + ( allPixR [i + 2, j - 2] )
-                              + ( allPixR [i - 2, j - 1] ) * 4 + ( allPixR [i - 1, j - 1] ) * 16 + ( allPixR [i, j - 1] ) * 26 + ( allPixR [i + 1, j - 1] ) * 16 + ( allPixR [i + 2, j - 1] ) * 4
-                              + ( allPixR [i - 2, j] ) * 7 + ( allPixR [i - 1, j] ) * 26 + ( allPixR [i, j] ) * 41 + ( allPixR [i + 1, j] ) * 26 + ( allPixR [i + 2, j] ) * 7
-                              + ( allPixR [i - 2, j + 1] ) * 4 + ( allPixR [i - 1, j + 1] ) * 16 + ( allPixR [i, j + 1] ) * 26 + ( allPixR [i + 1, j + 1] ) * 16 + ( allPixR [i + 2, j + 1] ) * 4
-                              + ( allPixR [i - 2, j + 2] ) * 1 + ( allPixR [i - 1, j + 2] ) * 4 + ( allPixR [i, j + 2] ) * 7 + ( allPixR [i + 1, j + 2] ) * 4 + ( allPixR [i + 2, j + 2] ) * 1 ) / 273
-                              );
-
-                    int green = (
-                              ( ( allPixG[i - 2, j - 2] ) * 1 + ( allPixG[i - 1, j - 2] ) * 4 + ( allPixG[i, j - 2] ) * 7 + ( allPixG[i + 1, j - 2] ) * 4 + ( allPixG[i + 2, j - 2] )
-                              + ( allPixG[i - 2, j - 1] ) * 4 + ( allPixG[i - 1, j - 1] ) * 16 + ( allPixG[i, j - 1] ) * 26 + ( allPixG[i + 1, j - 1] ) * 16 + ( allPixG[i + 2, j - 1] ) * 4
-                              + ( allPixG[i - 2, j] ) * 7 + ( allPixG[i - 1, j] ) * 26 + ( allPixG[i, j] ) * 41 + ( allPixG[i + 1, j] ) * 26 + ( allPixG[i + 2, j] ) * 7
-                              + ( allPixG[i - 2, j + 1] ) * 4 + ( allPixG[i - 1, j + 1] ) * 16 + ( allPixG[i, j + 1] ) * 26 + ( allPixG[i + 1, j + 1] ) * 16 + ( allPixG[i + 2, j + 1] ) * 4
-                              + ( allPixG[i - 2, j + 2] ) * 1 + ( allPixG[i - 1, j + 2] ) * 4 + ( allPixG[i, j + 2] ) * 7 + ( allPixG[i + 1, j + 2] ) * 4 + ( allPixG[i + 2, j + 2] ) * 1 ) / 273
-                              );
-
-                    int blue = (
-                              ( ( allPixB[i - 2, j - 2] ) * 1 + ( allPixB[i - 1, j - 2] ) * 4 + ( allPixB[i, j - 2] ) * 7 + ( allPixB[i + 1, j - 2] ) * 4 + ( allPixB[i + 2, j - 2] )
-                              + ( allPixB[i - 2, j - 1] ) * 4 + ( allPixB[i - 1, j - 1] ) * 16 + ( allPixB[i, j - 1] ) * 26 + ( allPixB[i + 1, j - 1] ) * 16 + ( allPixB[i + 2, j - 1] ) * 4
-                              + ( allPixB[i - 2, j] ) * 7 + ( allPixB[i - 1, j] ) * 26 + ( allPixB[i, j] ) * 41 + ( allPixB[i + 1, j] ) * 26 + ( allPixB[i + 2, j] ) * 7
-                              + ( allPixB[i - 2, j + 1] ) * 4 + ( allPixB[i - 1, j + 1] ) * 16 + ( allPixB[i, j + 1] ) * 26 + ( allPixB[i + 1, j + 1] ) * 16 + ( allPixB[i + 2, j + 1] ) * 4
-                              + ( allPixB[i - 2, j + 2] ) * 1 + ( allPixB[i - 1, j + 2] ) * 4 + ( allPixB[i, j + 2] ) * 7 + ( allPixB[i + 1, j + 2] ) * 4 + ( allPixB[i + 2, j + 2] ) * 1 ) / 273
-                              );
 
                     //The pixels with i<2 or j<2 will be 0, as before (when we were using the n matrix)
-                    allPixRn[i, j] = red;
-                    allPixGn[i, j] = green;
-                    allPixBn[i, j] = blue;
+                    allPixRn[i, j] = getConvolutionValue(ref allPixR, i, j);
+                    allPixGn[i, j] = getConvolutionValue(ref allPixG, i, j);
+                    allPixBn[i, j] = getConvolutionValue(ref allPixB, i, j);
                 }
             }
             //Now allPixRn, allPixGn and allPixBn have a blurred version of the original image (separated in Red, Green and Blue).
@@ -319,7 +319,6 @@ namespace imp4
                         {
                             //The point may be considered of an edge, so we keep the value of the gradient (we are only considering the Red Matrix here).
                             //The gradient will also have to be greater than the threshold for the pixel to be considered part of an edge
-                            //TODO: add high threshold
                             allPixRs[i, j] = graidientR[i, j];
                         }
                         else {
@@ -486,7 +485,7 @@ namespace imp4
                         bb.SetPixel(i, j, Color.White);
                 }
             }
-            pctEdges.Image = bb;        
+            pctEdges.Image = bb;
         }
 
         private void btnCanny_Click ( object sender, EventArgs e )
