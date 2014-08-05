@@ -18,18 +18,26 @@ namespace imp4
 
         String filePath;
 
-        private void button1_Click ( object sender, EventArgs e )
+        private void btnUploadImage_Click ( object sender, EventArgs e )
         {
             if ( dOpen.ShowDialog () == DialogResult.OK ) {
                 filePath = dOpen.FileName;
-                pictureBox1.Image = new Bitmap( dOpen.OpenFile ());
+                pctInput.Image = new Bitmap( dOpen.OpenFile ());
             }
+        }
+
+        private bool isValueBetweenThresholds(int value, int lowThreshold, int highThreshold)
+        {
+            if ((value > lowThreshold) && (value < highThreshold))
+                return true;
+
+            return false;
         }
 
         private void canny ( ) {
 
             //I get the bitmap from the image loaded
-            Bitmap b = new Bitmap (pictureBox1.Image);
+            Bitmap b = new Bitmap (pctInput.Image);
             int width = b.Width;
             int height = b.Height;
 
@@ -119,7 +127,7 @@ namespace imp4
             int[,] tanB = new int[width, height];
 
             //int limit = 128 * 128;
-            //Bitmap bb = new Bitmap (pictureBox1.Image);
+            //Bitmap bb = new Bitmap (pctInput.Image);
 
             for ( int i = 1; i < b.Width - 1; i++ )
             {
@@ -452,10 +460,12 @@ namespace imp4
                 }
             }
 
-            //TODO: fixed threshold?
-            int threshold = Convert.ToInt16(textBox1.Text);
+            int lowThreshold = Convert.ToInt16(txtLowThreshold.Text);
 
-            // Bitmap bb = new Bitmap (pictureBox1.Image);
+            //TODO: is default high threshold OK?
+            int highThreshold = Convert.ToInt16(txtHighThreshold.Text);
+
+            // Bitmap bb = new Bitmap (pctInput.Image);
             Bitmap bb = new Bitmap(width,height);
 
             for (int i = 2; i < width - 2; i++)
@@ -464,7 +474,10 @@ namespace imp4
                 {
 
                     //If any of the values of the gradients is greater than the threshold, then I consider that the pixel belongs to a border, so I light it up
-                    if (allPixRs[i, j] > threshold || allPixGs[i, j] > threshold || allPixBs[i, j] > threshold)
+                    if (isValueBetweenThresholds(allPixRs[i, j], lowThreshold, highThreshold) ||
+                        isValueBetweenThresholds(allPixGs[i, j], lowThreshold, highThreshold) ||
+                        isValueBetweenThresholds(allPixBs[i, j], lowThreshold, highThreshold)
+                        )
                     {
                         //The three
                         bb.SetPixel(i, j, Color.Black);
@@ -473,10 +486,10 @@ namespace imp4
                         bb.SetPixel(i, j, Color.White);
                 }
             }
-            pictureBox2.Image = bb;        
+            pctEdges.Image = bb;        
         }
 
-        private void button3_Click ( object sender, EventArgs e )
+        private void btnCanny_Click ( object sender, EventArgs e )
         {
             canny ();
         }
