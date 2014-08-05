@@ -454,9 +454,6 @@ namespace imp4
 
             //TODO: fixed threshold?
             int threshold = Convert.ToInt16(textBox1.Text);
-            int[,] allPixRf = new int[width, height];
-            int[,] allPixGf = new int[width, height];
-            int[,] allPixBf = new int[width, height];
 
             // Bitmap bb = new Bitmap (pictureBox1.Image);
             Bitmap bb = new Bitmap(width,height);
