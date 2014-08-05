@@ -33,9 +33,6 @@ namespace imp4
             int width = b.Width;
             int height = b.Height;
 
-            //this wont be the final bitmap for pctOutputImage
-            Bitmap n = new Bitmap (width, height);
-
             int[,] allPixR = new int[width, height];
             int[,] allPixG = new int[width, height];
             int[,] allPixB = new int[width, height];
@@ -50,6 +47,10 @@ namespace imp4
                     allPixB[i, j] = b.GetPixel (i, j).B;
                 }
             }
+
+            int[,] allPixRn = new int[width, height];
+            int[,] allPixGn = new int[width, height];
+            int[,] allPixBn = new int[width, height];
 
             //Apply Gaussian filter (convolution of the 2 matrices)
             //The Gaussian matrix is:
@@ -81,25 +82,16 @@ namespace imp4
                               + ( allPixB[i - 2, j + 1] ) * 4 + ( allPixB[i - 1, j + 1] ) * 16 + ( allPixB[i, j + 1] ) * 26 + ( allPixB[i + 1, j + 1] ) * 16 + ( allPixB[i + 2, j + 1] ) * 4
                               + ( allPixB[i - 2, j + 2] ) * 1 + ( allPixB[i - 1, j + 2] ) * 4 + ( allPixB[i, j + 2] ) * 7 + ( allPixB[i + 1, j + 2] ) * 4 + ( allPixB[i + 2, j + 2] ) * 1 ) / 273
                               );
-                    n.SetPixel (i, j, Color.FromArgb (red, green, blue));
+
+                    //The pixels with i<2 or j<2 will be 0, as before (when we were using the n matrix)
+                    allPixRn[i, j] = red;
+                    allPixGn[i, j] = green;
+                    allPixBn[i, j] = blue;
                 }
             }
-            //Now n has a blurred version of the original image. It is not affected by a single noisy pixel by any significant degree
-            //TODO: Is n really necessary?
+            //Now allPixRn, allPixGn and allPixBn have a blurred version of the original image (separated in Red, Green and Blue).
+            //They is not affected by a single noisy pixel by any significant degree
 
-            int[,] allPixRn = new int[width, height];
-            int[,] allPixGn = new int[width, height];
-            int[,] allPixBn = new int[width, height];
-
-            for ( int i = 0; i < width; i++ )
-            {
-                for ( int j = 0; j < height; j++ )
-                {
-                    allPixRn[i, j] = n.GetPixel (i, j).R;
-                    allPixGn[i, j] = n.GetPixel (i, j).G;
-                    allPixBn[i, j] = n.GetPixel (i, j).B;
-                }
-            }
 
             //Now I use the Sobel operator to get the derivatives
             //Note: I could do this also with Roberts or Prewitt
@@ -466,50 +458,22 @@ namespace imp4
             int[,] allPixGf = new int[width, height];
             int[,] allPixBf = new int[width, height];
 
-           // Bitmap bb = new Bitmap (pictureBox1.Image);
-            Bitmap bb = new Bitmap(width,height);            
+            // Bitmap bb = new Bitmap (pictureBox1.Image);
+            Bitmap bb = new Bitmap(width,height);
 
-            for (int i = 2; i <width-2 ;i++){
-                for ( int j = 2; j < height-2;j++ )
+            for (int i = 2; i < width - 2; i++)
+            {
+                for (int j = 2; j < height - 2; j++)
                 {
-                    //If any of the values of the gradients is greater than the threshold, then I light up the pixel in allPixRf
-                    //TODO: couldnt allPixRf be a boolean matrix? Same for green and blue
-                    //TODO2: do we really need these matrices?
-                    if ( allPixRs[i, j] > threshold )
-                    {
-                        allPixRf[i, j] = 1;
-                    }
-                    else {
-                        allPixRf[i, j] = 0;
-                    }
 
-                    if ( allPixGs[i, j] > threshold )
+                    //If any of the values of the gradients is greater than the threshold, then I consider that the pixel belongs to a border, so I light it up
+                    if (allPixRs[i, j] > threshold || allPixGs[i, j] > threshold || allPixBs[i, j] > threshold)
                     {
-                        allPixGf[i, j] = 1;
+                        //The three
+                        bb.SetPixel(i, j, Color.Black);
                     }
                     else
-                    {
-                        allPixGf[i, j] = 0;
-                    }
-
-                    if ( allPixBs[i, j] > threshold )
-                    {
-                        allPixBf[i, j] = 1;
-                    }
-                    else
-                    {
-                        allPixBf[i, j] = 0;
-                    }
-
-
-                    //If any of the values of the matrices is 1, then one of the gradients is greater than the threshold, so I consider that the pixel belongs to a border,
-                    // and I light it up
-                    if ( allPixRf[i, j] == 1 || allPixGf[i, j] == 1 || allPixBf[i, j] == 1 )
-                    {
-                        bb.SetPixel (i, j, Color.Black);
-                    }
-                    else
-                        bb.SetPixel (i, j, Color.White);
+                        bb.SetPixel(i, j, Color.White);
                 }
             }
             pictureBox2.Image = bb;        
